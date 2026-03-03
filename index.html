@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AHOF Analytics — FnF Entertainment</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090F;--panel:#0C0F18;--panel2:#101420;
+  --border:#181D2C;--border2:#1F2638;
+  --accent:#FF3058;--accent2:#7652F0;--accent3:#00C9A0;--gold:#F5C030;
+  --text:#E6EAF5;--muted:#525B78;--muted2:#3A4258;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;}
+body{color:var(--text);font-family:'DM Sans',sans-serif;}
+
+/* ── LAYOUT ── */
+#app{display:flex;width:100%;height:100%;overflow:hidden;}
+#sidebar{width:228px;min-width:228px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+#sidebar::-webkit-scrollbar{width:3px;}#sidebar::-webkit-scrollbar-thumb{background:var(--border);}
+#content{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+
+/* ── PAGES ── */
+.pg{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s;}
+.pg.show{opacity:1;pointer-events:all;}
+
+/* ── SIDEBAR ── */
+.logo-block{padding:18px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo-txt{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:5px;line-height:1;
+  background:linear-gradient(130deg,#FF3058,#9D4EDD 55%,#7652F0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:8.5px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+.logo-badges{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+.lbadge{font-size:7.5px;padding:2px 6px;border-radius:3px;letter-spacing:.8px;font-weight:600;}
+.lbadge.g{background:rgba(0,201,160,.12);color:var(--accent3);border:1px solid rgba(0,201,160,.22);}
+.lbadge.p{background:rgba(118,82,240,.12);color:#9D7EFF;border:1px solid rgba(118,82,240,.22);}
+
+.nav-section{padding:12px 10px 0;}
+.nav-label{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0 8px;margin-bottom:4px;}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);transition:all .15s;margin-bottom:1px;user-select:none;}
+.ni:hover{background:rgba(255,48,88,.07);color:var(--text);}
+.ni.on{background:rgba(255,48,88,.1);color:var(--accent);}
+.ni-ico{font-size:12px;width:15px;text-align:center;}
+.nav-sep{height:1px;background:var(--border);margin:8px 10px;}
+
+.member-list{padding:0 10px 12px;}
+.mc{display:flex;align-items:center;gap:6px;padding:4px 7px;border-radius:7px;cursor:pointer;transition:background .15s;}
+.mc:hover{background:var(--border);}
+.mav{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;}
+
+/* ── TOPNAV ── */
+.topnav{display:flex;align-items:center;gap:8px;padding:12px 18px 0;flex-shrink:0;}
+.tb{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:500;border:1px solid var(--border);background:var(--panel);color:var(--muted);transition:all .15s;user-select:none;white-space:nowrap;}
+.tb:hover{color:var(--text);border-color:var(--border2);}
+.tb.h:hover{color:var(--accent3);border-color:rgba(0,201,160,.4);}
+.tb.x:hover{color:var(--accent);border-color:rgba(255,48,88,.4);background:rgba(255,48,88,.06);}
+.tn-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;flex:1;}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(0,201,160,.1);border:1px solid rgba(0,201,160,.28);color:var(--accent3);padding:4px 10px;border-radius:16px;font-size:9.5px;font-weight:600;letter-spacing:1px;white-space:nowrap;}
+.ldot{width:5px;height:5px;background:var(--accent3);border-radius:50%;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.6)}}
+.clk{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--panel);border:1px solid var(--border);padding:4px 9px;border-radius:6px;white-space:nowrap;}
+
+/* ── SCROLL AREA ── */
+.pscroll{flex:1;overflow-y:auto;padding:12px 18px 36px;}
+.pscroll::-webkit-scrollbar{width:4px;}.pscroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── CARDS ── */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.card-title{font-size:12px;font-weight:600;color:var(--text);}
+.card-sub{font-size:9px;color:var(--muted);}
+canvas{display:block;width:100%;}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:13px;position:relative;overflow:hidden;transition:transform .2s;}
+.kpi:hover{transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi.k1::before{background:var(--accent)}.kpi.k2::before{background:var(--accent2)}.kpi.k3::before{background:var(--accent3)}.kpi.k4::before{background:var(--gold)}
+.kl{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.kv{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1;margin-bottom:4px;}
+.kd{font-size:9.5px;}.kd.up{color:var(--accent3)}.kd.dn{color:var(--accent)}.kd.nt{color:var(--muted)}
+.kico{position:absolute;right:11px;top:11px;font-size:16px;opacity:.08;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:2.2fr 1fr;gap:10px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.g22{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.gcols3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+
+/* ── SONG TABLE ── */
+.stbl{width:100%;border-collapse:collapse;}
+.stbl th{font-size:8px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:left;padding:0 5px 6px;border-bottom:1px solid var(--border);}
+.stbl td{padding:6px 5px;font-size:10.5px;border-bottom:1px solid rgba(24,29,44,.5);vertical-align:middle;}
+.stbl tr:last-child td{border-bottom:none;}
+.stbl tr:hover td{background:rgba(255,255,255,.015);}
+.rn{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--muted);}.rn.t{color:var(--gold);}
+.sup{color:var(--accent3)}.sdn{color:var(--accent)}.ssm{color:var(--muted)}
+
+/* ── SOCIAL ── */
+.soc-item{display:flex;align-items:center;gap:9px;padding:9px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;transition:border-color .18s;text-decoration:none;margin-bottom:7px;}
+.soc-item:hover{border-color:rgba(118,82,240,.4);}
+.soc-ico{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700;}
+.soc-bar-w{margin-top:3px;height:2px;background:var(--border);border-radius:2px;}
+.soc-bar{height:100%;border-radius:2px;}
+
+/* ── FEED ── */
+.feed-wrap{display:flex;flex-direction:column;gap:7px;overflow-y:auto;}
+.feed-wrap::-webkit-scrollbar{width:3px;}.feed-wrap::-webkit-scrollbar-thumb{background:var(--border);}
+.fi{display:flex;gap:8px;padding:9px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;transition:border-color .18s;}
+.fi:hover{border-color:rgba(0,201,160,.3);}
+.fdot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.ftxt{font-size:10.5px;color:var(--text);line-height:1.5;}
+.ftime{font-size:9px;color:var(--muted);margin-top:2px;}
+.ftag{display:inline-block;font-size:7.5px;padding:1px 5px;border-radius:3px;letter-spacing:.5px;font-weight:700;margin-right:3px;text-transform:uppercase;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;}
+.tab{padding:3px 9px;border-radius:5px;font-size:10px;cursor:pointer;color:var(--muted);transition:all .15s;border:1px solid transparent;}
+.tab.on{background:rgba(255,48,88,.12);color:var(--accent);border-color:rgba(255,48,88,.28);}
+.tab:hover:not(.on){color:var(--text);}
+
+/* ── ANN TABS ── */
+.atab{padding:5px 11px;border-radius:7px;font-size:11px;cursor:pointer;color:var(--muted);border:1px solid var(--border);transition:all .15s;user-select:none;}
+.atab:hover{color:var(--text);border-color:var(--border2);}
+.atab.on{background:rgba(255,48,88,.12);color:var(--accent);border-color:rgba(255,48,88,.28);}
+
+/* ── ANN CARD ── */
+.ann-card{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:15px;margin-bottom:10px;transition:border-color .18s,transform .18s;}
+.ann-card:hover{transform:translateY(-1px);border-color:var(--border2);}
+.ann-card.brk{border-left:3px solid var(--accent);}
+.ann-card.ai{border-left:3px solid var(--accent2);}
+
+/* ── MEMBER CARD ── */
+.mem-card{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:13px;transition:border-color .18s;}
+.mem-card:hover{border-color:rgba(118,82,240,.35);}
+
+/* ── SCHEDULE ── */
+.sched-item{display:flex;gap:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:11px;align-items:flex-start;margin-bottom:8px;transition:border-color .18s;}
+.sched-item:hover{border-color:rgba(255,48,88,.3);}
+.sched-day{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:var(--accent);width:40px;flex-shrink:0;text-align:center;}
+.sched-mo{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;text-align:center;}
+
+/* ── EXIT OVERLAY ── */
+#exitOv{position:fixed;inset:0;background:rgba(7,9,15,.92);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s;}
+#exitOv.show{opacity:1;pointer-events:all;}
+.exit-box{background:var(--panel);border:1px solid var(--border2);border-radius:14px;padding:30px 36px;text-align:center;max-width:320px;}
+
+/* ── ALBUM CARD ── */
+.album-card{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:14px;transition:border-color .18s,transform .18s;}
+.album-card:hover{transform:translateY(-2px);border-color:rgba(118,82,240,.4);}
+
+/* ── CHART ENTRY ── */
+.ce{display:flex;align-items:center;gap:10px;padding:9px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;}
+.ce:hover{background:rgba(255,255,255,.035);}
+.ce-rank{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);width:28px;flex-shrink:0;}.ce-rank.t{color:var(--gold);}
+
+/* ── HOME HERO ── */
+.hero-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 48px;position:relative;overflow:hidden;}
+.hero-glow{position:absolute;top:-100px;right:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(118,82,240,.07),transparent 70%);pointer-events:none;}
+.hero-glow2{position:absolute;bottom:-80px;left:100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,48,88,.05),transparent 70%);pointer-events:none;}
+.hero-eyebrow{font-size:9.5px;letter-spacing:3px;color:var(--accent3);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:68px;letter-spacing:5px;line-height:.9;
+  background:linear-gradient(130deg,#FF3058,#9D4EDD 50%,#7652F0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+.hero-sub{font-size:12.5px;color:var(--muted);max-width:400px;line-height:1.75;margin-bottom:28px;}
+.hbtn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:500;transition:all .2s;border:none;text-decoration:none;margin-right:8px;margin-bottom:8px;}
+.hbtn.p{background:linear-gradient(130deg,#FF3058,#9D4EDD);color:#fff;box-shadow:0 4px 18px rgba(255,48,88,.28);}
+.hbtn.p:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(255,48,88,.38);}
+.hbtn.s{background:var(--panel);border:1px solid var(--border);color:var(--text);}
+.hbtn.s:hover{border-color:var(--border2);background:var(--panel2);}
+.hcards{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:28px;max-width:680px;}
+.hcard{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;}
+.hcard:hover{transform:translateY(-3px);border-color:rgba(255,48,88,.3);background:var(--panel2);}
+
+/* ── AI ANSWER ── */
+.ai-ans{background:rgba(118,82,240,.06);border:1px solid rgba(118,82,240,.25);border-radius:9px;padding:13px;margin-top:11px;}
+.typing{display:flex;gap:4px;align-items:center;}
+.typing span{width:7px;height:7px;background:var(--accent2);border-radius:50%;animation:blink .8s infinite;}
+.typing span:nth-child(2){animation-delay:.15s;}.typing span:nth-child(3){animation-delay:.3s;}
+@keyframes blink{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.sbadge{display:inline-block;font-size:8px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-right:5px;}
+</style>
+</head>
+<body>
+
+<!-- EXIT OVERLAY -->
+<div id="exitOv">
+  <div class="exit-box">
+    <div style="font-size:30px;margin-bottom:10px">👋</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:8px;">Exit Dashboard?</div>
+    <div style="font-size:11.5px;color:var(--muted);margin-bottom:22px;line-height:1.6;">Are you sure you want to leave<br>the AHOF Analytics Dashboard?</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="closeExit()" style="padding:9px 22px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;background:var(--panel2);color:var(--text);border:1px solid var(--border);font-family:'DM Sans',sans-serif;">Cancel</button>
+      <button onclick="doExit()" style="padding:9px 22px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:var(--accent);color:#fff;border:none;font-family:'DM Sans',sans-serif;">Exit</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="logo-block">
+      <div class="logo-txt">AHOF</div>
+      <div class="logo-sub">FnF Entertainment · Analytics</div>
+      <div class="logo-badges">
+        <span class="lbadge g">ALL-TIME HALL OF FAMER</span>
+        <span class="lbadge p">아홉 · 9 Members</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Pages</div>
+      <div class="ni on" data-page="home" onclick="goTo('home')"><span class="ni-ico">⌂</span>Home</div>
+      <div class="ni" data-page="dashboard" onclick="goTo('dashboard')"><span class="ni-ico">▦</span>Dashboard</div>
+      <div class="ni" data-page="music" onclick="goTo('music')"><span class="ni-ico">♫</span>Music Tracking</div>
+      <div class="ni" data-page="social" onclick="goTo('social')"><span class="ni-ico">◎</span>Social Media</div>
+      <div class="ni" data-page="charting" onclick="goTo('charting')"><span class="ni-ico">⟨⟩</span>Charting</div>
+      <div class="ni" data-page="fanbase" onclick="goTo('fanbase')"><span class="ni-ico">⊕</span>Fanbase · FOHA</div>
+      <div class="ni" data-page="schedule" onclick="goTo('schedule')"><span class="ni-ico">◈</span>Schedule</div>
+      <div class="ni" data-page="announcements" onclick="goTo('announcements')"><span class="ni-ico">📢</span>Announcements</div>
+      <div class="nav-sep"></div>
+      <div class="ni" style="color:var(--accent);" onclick="showExit()"><span class="ni-ico">✕</span>Exit</div>
+    </div>
+    <div class="nav-section" style="margin-top:8px;">
+      <div class="nav-label">Members</div>
+    </div>
+    <div class="member-list" id="memberSidebar"></div>
+    <div style="flex:1;"></div>
+    <div style="padding:10px 12px 14px;font-size:9px;color:var(--muted2);text-align:center;line-height:1.7;border-top:1px solid var(--border);margin-top:8px;">
+      FOHA · Forever Our Home<br>FnF Entertainment © 2025–2026
+    </div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div id="content">
+
+    <!-- ══ PAGE: HOME ══ -->
+    <div class="pg show" id="pg-home">
+      <div class="hero-wrap">
+        <div class="hero-glow"></div><div class="hero-glow2"></div>
+        <div class="hero-eyebrow"><span class="ldot" style="width:7px;height:7px;"></span>Live Analytics · FnF Entertainment</div>
+        <div class="hero-title">AHOF<br>ANALYTICS</div>
+        <div class="hero-sub">Real-time tracking dashboard for AHOF — All-Time Hall of Famers. Monitor music, social media, charts, and FOHA fandom activity.</div>
+        <div>
+          <div class="hbtn p" onclick="goTo('dashboard')">▦ Open Dashboard</div>
+          <div class="hbtn s" onclick="goTo('music')">♫ Music</div>
+          <div class="hbtn s" onclick="goTo('announcements')">📢 Announcements</div>
+        </div>
+        <div class="hcards">
+          <div class="hcard" onclick="goTo('dashboard')"><div style="font-size:20px;margin-bottom:5px;">▦</div><div style="font-size:11.5px;font-weight:600;color:var(--text);">Dashboard</div><div style="font-size:9.5px;color:var(--muted);margin-top:2px;">Live overview</div></div>
+          <div class="hcard" onclick="goTo('social')"><div style="font-size:20px;margin-bottom:5px;">◎</div><div style="font-size:11.5px;font-weight:600;color:var(--text);">Social Media</div><div style="font-size:9.5px;color:var(--muted);margin-top:2px;">All platforms</div></div>
+          <div class="hcard" onclick="goTo('charting')"><div style="font-size:20px;margin-bottom:5px;">⟨⟩</div><div style="font-size:11.5px;font-weight:600;color:var(--text);">Charting</div><div style="font-size:9.5px;color:var(--muted);margin-top:2px;">Chart positions</div></div>
+          <div class="hcard" onclick="goTo('announcements')"><div style="font-size:20px;margin-bottom:5px;">📢</div><div style="font-size:11.5px;font-weight:600;color:var(--text);">Announcements</div><div style="font-size:9.5px;color:var(--muted);margin-top:2px;">AI news scanner</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: DASHBOARD ══ -->
+    <div class="pg" id="pg-dashboard">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Dashboard</div>
+        <div class="live-pill"><div class="ldot"></div>LIVE</div>
+        <div class="clk" id="clk1"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <div class="kpi-row" style="margin-top:12px;">
+          <div class="kpi k1"><div class="kico">♫</div><div class="kl">Album Sales (Hanteo)</div><div class="kv">720K+</div><div class="kd up">▲ The Passage: 350K/2 days</div></div>
+          <div class="kpi k2"><div class="kico">📸</div><div class="kl">Instagram Followers</div><div class="kv" id="d-ig">1.1M</div><div class="kd up">▲ Growing daily</div></div>
+          <div class="kpi k3"><div class="kico">▶</div><div class="kl">TikTok Followers</div><div class="kv">1.0M+</div><div class="kd up">▲ Milestone Feb 20, 2026</div></div>
+          <div class="kpi k4"><div class="kico">⟨⟩</div><div class="kl">Chart Peak (Global)</div><div class="kv">#3</div><div class="kd up">▲ UP 2 spots this week</div></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-hdr">
+              <div class="card-title">Performance — 2025 Timeline</div>
+              <div class="tabs">
+                <div class="tab on" onclick="switchDashTab(this,'sales')">Sales</div>
+                <div class="tab" onclick="switchDashTab(this,'streams')">Streams</div>
+                <div class="tab" onclick="switchDashTab(this,'social')">Social</div>
+              </div>
+            </div>
+            <canvas id="dashLine" height="140"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">Platform Mix</div></div>
+            <canvas id="dashDonut" height="140"></canvas>
+          </div>
+        </div>
+        <div class="g3">
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">🎵 Top Tracks</div><div class="card-sub" style="color:var(--accent3);">LIVE</div></div>
+            <table class="stbl"><thead><tr><th>#</th><th>Track</th><th>Streams</th><th>±</th></tr></thead><tbody id="d-tracks"></tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">📱 Social Snapshot</div></div>
+            <div id="d-soc"></div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">⚡ Activity Feed</div><div class="card-sub" style="color:var(--accent3);">REALTIME</div></div>
+            <div class="feed-wrap" id="d-feed" style="max-height:230px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: MUSIC ══ -->
+    <div class="pg" id="pg-music">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Music Tracking</div>
+        <div class="live-pill"><div class="ldot"></div>LIVE</div>
+        <div class="clk" id="clk2"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <div style="font-size:10.5px;color:var(--muted);margin:10px 0 14px;line-height:1.6;">Official AHOF discography tracked across Spotify, Melon, Apple Music, FLO, Genie, Bugs &amp; YouTube Music.</div>
+        <div class="gcols3" style="margin-bottom:14px;">
+          <div class="album-card" style="border-top:2px solid var(--accent);">
+            <div style="font-size:26px;margin-bottom:7px;">💿</div>
+            <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">1st Mini Album</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin:3px 0;">WHO WE ARE</div>
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:7px;">Released: July 1, 2025</div>
+            <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent3);">369,850 copies</div>
+            <div style="font-size:9px;color:var(--muted);">Week 1 · Highest 2025 Rookie</div>
+            <div style="margin-top:8px;height:3px;background:var(--border);border-radius:3px;"><div style="width:72%;height:100%;border-radius:3px;background:var(--accent);"></div></div>
+          </div>
+          <div class="album-card" style="border-top:2px solid var(--accent2);">
+            <div style="font-size:26px;margin-bottom:7px;">🎵</div>
+            <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">2nd Mini Album</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin:3px 0;">THE PASSAGE</div>
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:7px;">Released: November 2025</div>
+            <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent3);">350,000+ copies</div>
+            <div style="font-size:9px;color:var(--muted);">2 days · First Platinum Cert.</div>
+            <div style="margin-top:8px;height:3px;background:var(--border);border-radius:3px;"><div style="width:90%;height:100%;border-radius:3px;background:var(--accent2);"></div></div>
+          </div>
+          <div class="album-card" style="border-top:2px solid var(--border);opacity:.55;">
+            <div style="font-size:26px;margin-bottom:7px;">✨</div>
+            <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Upcoming</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin:3px 0;">TBA</div>
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:7px;">2026 — To be announced</div>
+            <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">—</div>
+            <div style="margin-top:8px;height:3px;background:var(--border);border-radius:3px;"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-hdr"><div class="card-title">🎶 All Tracks — Live Stream Count</div><div class="card-sub" style="color:var(--accent3);">LIVE</div></div>
+          <table class="stbl">
+            <thead><tr><th>#</th><th>Title</th><th>Album</th><th>Streams</th><th>Peak</th><th>±</th></tr></thead>
+            <tbody id="m-tracks"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Stream Trend — 2025</div></div>
+          <canvas id="musicLine" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: SOCIAL ══ -->
+    <div class="pg" id="pg-social">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Social Media</div>
+        <div class="live-pill"><div class="ldot"></div>LIVE</div>
+        <div class="clk" id="clk3"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <div style="font-size:10.5px;color:var(--muted);margin:10px 0 14px;">Official AHOF accounts verified from FnF Entertainment. Click any card to open the official page.</div>
+        <div class="g22" id="soc-full"></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: CHARTING ══ -->
+    <div class="pg" id="pg-charting">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Charting</div>
+        <div class="live-pill"><div class="ldot"></div>LIVE</div>
+        <div class="clk" id="clk4"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <div class="kpi-row" style="margin-top:12px;">
+          <div class="kpi k1"><div class="kl">Melon Daily Peak</div><div class="kv">#7</div><div class="kd up">▲ Rendezvous</div></div>
+          <div class="kpi k2"><div class="kl">Hanteo Week 1</div><div class="kv">369K</div><div class="kd up">▲ Highest Rookie 2025</div></div>
+          <div class="kpi k3"><div class="kl">Gaon Album</div><div class="kv">Top 5</div><div class="kd up">▲ The Passage</div></div>
+          <div class="kpi k4"><div class="kl">Platinum Cert.</div><div class="kv">1ST</div><div class="kd up">▲ KMCA · The Passage</div></div>
+        </div>
+        <div class="g22">
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">🇰🇷 Korean Charts</div><div class="card-sub">Melon · Genie · FLO</div></div>
+            <div id="kr-charts"></div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">🌐 Global Charts</div><div class="card-sub">Spotify · Apple Music</div></div>
+            <div id="gl-charts"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Hanteo Daily Sales — The Passage Era</div></div>
+          <canvas id="chartLine" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: FANBASE ══ -->
+    <div class="pg" id="pg-fanbase">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Fanbase · FOHA</div>
+        <div class="live-pill"><div class="ldot"></div>LIVE</div>
+        <div class="clk" id="clk5"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <div style="font-size:10.5px;color:var(--muted);margin:10px 0 14px;line-height:1.6;"><b style="color:var(--gold);">FOHA</b> (포하) — AHOF reversed. "Forever Our Home, AHOF." Fandom name revealed at debut showcase.</div>
+        <div class="gcols3" style="margin-bottom:14px;">
+          <div class="card" style="text-align:center;"><div style="font-size:24px;margin-bottom:5px;">🌍</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);">2.9M+</div><div style="font-size:8.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Total Social Followers</div></div>
+          <div class="card" style="text-align:center;"><div style="font-size:24px;margin-bottom:5px;">💙</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);">240K</div><div style="font-size:8.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Weverse Members</div></div>
+          <div class="card" style="text-align:center;"><div style="font-size:24px;margin-bottom:5px;">🏆</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);">3.16M</div><div style="font-size:8.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">JL Universe League Votes</div></div>
+          <div class="card" style="text-align:center;"><div style="font-size:24px;margin-bottom:5px;">🎪</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);">AHOFOHA</div><div style="font-size:8.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Fan-Con · Seoul 2026</div></div>
+          <div class="card" style="text-align:center;"><div style="font-size:24px;margin-bottom:5px;">🗳️</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);">715K+</div><div style="font-size:8.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Bias Poll Votes</div></div>
+          <div class="card" style="text-align:center;"><div style="font-size:24px;margin-bottom:5px;">📦</div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);">720K+</div><div style="font-size:8.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Total Album Sales</div></div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:12px;">9 Members</div>
+        <div class="gcols3" id="member-cards"></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: SCHEDULE ══ -->
+    <div class="pg" id="pg-schedule">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Schedule</div>
+        <div class="clk" id="clk6"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <div style="font-size:10.5px;color:var(--muted);margin:10px 0 14px;">Key AHOF milestones and events from debut through 2026.</div>
+        <div id="sched-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: ANNOUNCEMENTS ══ -->
+    <div class="pg" id="pg-announcements">
+      <div class="topnav">
+        <div class="tb" onclick="goBack()">← Back</div>
+        <div class="tb h" onclick="goTo('home')">⌂ Home</div>
+        <div class="tn-title">Announcements</div>
+        <div class="live-pill"><div class="ldot"></div>AI-POWERED</div>
+        <div class="clk" id="clk7"></div>
+        <div class="tb x" onclick="showExit()">✕ Exit</div>
+      </div>
+      <div class="pscroll">
+        <!-- AI Scanner -->
+        <div style="display:flex;align-items:center;gap:12px;margin:10px 0 12px;padding:13px;background:var(--panel);border:1px solid var(--border);border-radius:11px;">
+          <div style="font-size:22px;">🤖</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;color:var(--text);">AI News Scanner</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:1px;">Searches official AHOF accounts, FnF Entertainment &amp; K-pop news for the latest updates</div>
+          </div>
+          <button id="scanBtn" onclick="runScan()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(130deg,#FF3058,#9D4EDD);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:11.5px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;">⚡ Scan Now</button>
+        </div>
+        <div style="font-size:9.5px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:5px;">
+          <span class="ldot" style="width:5px;height:5px;flex-shrink:0;"></span>
+          Last scanned: <span id="lastScan">—</span> &nbsp;·&nbsp; Instagram · TikTok · Weverse · X · YouTube · FnF
+        </div>
+        <div id="scanResult" style="margin-bottom:12px;"></div>
+        <!-- Filter tabs -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="atab on" onclick="annFilter(this,'all')">All</div>
+          <div class="atab" onclick="annFilter(this,'comeback')">🎵 Comeback</div>
+          <div class="atab" onclick="annFilter(this,'social')">📱 Social</div>
+          <div class="atab" onclick="annFilter(this,'event')">🎪 Event</div>
+          <div class="atab" onclick="annFilter(this,'chart')">📈 Chart</div>
+          <div class="atab" onclick="annFilter(this,'member')">👤 Member</div>
+        </div>
+        <div id="ann-list"></div>
+        <!-- Ask AI -->
+        <div class="card" style="margin-top:6px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">💬 Ask about AHOF</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:9px;">Ask anything — comeback dates, member info, chart performance, latest news.</div>
+          <div style="display:flex;gap:8px;">
+            <input id="askInput" type="text" placeholder="e.g. When is AHOF's next comeback?"
+              style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:11.5px;outline:none;"
+              onfocus="this.style.borderColor='rgba(118,82,240,.5)'"
+              onblur="this.style.borderColor='var(--border)'"
+              onkeydown="if(event.key==='Enter')askAI()">
+            <button onclick="askAI()" style="padding:8px 16px;background:rgba(118,82,240,.18);color:#9D7EFF;border:1px solid rgba(118,82,240,.35);border-radius:7px;cursor:pointer;font-size:11.5px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;">Ask AI</button>
+          </div>
+          <div id="ai-answer"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ══════════════ DATA ══════════════
+const MEMBERS = [
+  {id:'JL',name:'JL',flag:'🇵🇭',role:'Main Vocalist · Visual · Center',nat:'Filipino',bd:'Apr 21, 2004',mbti:'ENFP',rank:1,col:'rgba(245,192,48,.2)',tc:'#F5C030',facts:'Born Muntinlupa. Also member of PLUUS (PH). Specialties: dancing, singing, cooking, photography. Rank #1 Universe League (3.16M votes).'},
+  {id:'WK',name:'Woongki',flag:'🇰🇷',role:'All-Rounder',nat:'Korean',bd:'Apr 23, 2002',mbti:'ENFP',rank:2,col:'rgba(255,48,88,.2)',tc:'var(--accent)',facts:'Former TO1 member. Boys Planet Rank 20. Child actor "Cha Jaedol". Life motto: "It will be a beautified memory anyway."'},
+  {id:'H',name:'Han',flag:'🇰🇷',role:'Main Vocalist',nat:'Korean',bd:'Sep 25, 2003',mbti:'ISTP',rank:3,col:'rgba(118,82,240,.2)',tc:'#9D7EFF',facts:'Born Yongin. Nickname: "Universe\'s Voice". Trained 7 years. Former Fantagio trainee. 504K Universe League votes.'},
+  {id:'S',name:'Steven',flag:'🇦🇺',role:'Leader',nat:'Korean-Australian',bd:'Jan 17, 2000',mbti:'INFP',rank:4,col:'rgba(0,201,160,.2)',tc:'var(--accent3)',facts:'Born South Korea, raised Sydney. Former LUMINOUS. Speaks English & Korean. Songwriter & composer. JYP alumnus.'},
+  {id:'SB',name:'Shuaibo',flag:'🇨🇳',role:'Member',nat:'Chinese',bd:'Jul 2, 2002',mbti:'ESFP',rank:5,col:'rgba(255,140,50,.2)',tc:'#FF8C32',facts:'Born Yingkou, Liaoning. Boys Planet 28th. Nickname: Asian Prince, Baby Frog. Role model: TWICE Sana.'},
+  {id:'JW',name:'Juwon',flag:'🇰🇷',role:'Member',nat:'Korean',bd:'Jul 24, 2006',mbti:'ISFP',rank:6,col:'rgba(200,100,255,.2)',tc:'#C864FF',facts:'Born Hwaseong. Graduated National High School of Traditional Korean Arts. Fav color: yellow. 225K UL votes.'},
+  {id:'JG',name:'Jeongwoo',flag:'🇰🇷',role:'Member',nat:'Korean',bd:'Sep 6, 2001',mbti:'ISTJ',rank:7,col:'rgba(64,196,255,.2)',tc:'#40C4FF',facts:'Born Gangdong-gu, Seoul. Specialty: flute. Nickname: "Sunshine on a scorching day." Military service completed.'},
+  {id:'CE',name:'Chih En',flag:'🇹🇼',role:'Visual',nat:'Taiwanese',bd:'Oct 28, 2006',mbti:'ENTJ',rank:8,col:'rgba(255,212,80,.2)',tc:'#FFD450',facts:'Born Taipei. Former Pledis trainee. Close with TWS Kyungmin. Emoji: 🐰. Returned Jan 2026 after health hiatus.'},
+  {id:'D',name:'Daisuke',flag:'🇯🇵',role:'Maknae',nat:'Japanese',bd:'Dec 25, 2009',mbti:'ENFP',rank:9,col:'rgba(255,100,100,.2)',tc:'#FF6464',facts:'Born Okinawa. Cat\'s Eye talent school. Modeled for Seiban & GU. BGM: "Candy" by NCT DREAM. Born Dec 25!'},
+];
+
+const SONGS = [
+  {title:'Rendezvous (그곳에서 만나요)',album:'Who We Are',streams:8241000,peak:'#7',d:'up'},
+  {title:'Pinocchio Hates Lies',album:'The Passage',streams:6190000,peak:'#4',d:'up'},
+  {title:'The Universe (파랑 학교)',album:'Who We Are',streams:3870000,peak:'#12',d:'up'},
+  {title:'The Passage',album:'The Passage',streams:2940000,peak:'#9',d:'same'},
+  {title:'WHO WE ARE',album:'Who We Are',streams:1820000,peak:'#18',d:'up'},
+  {title:'Into The Light',album:'The Passage',streams:1340000,peak:'#21',d:'up'},
+  {title:'FOHA',album:'Who We Are',streams:980000,peak:'#24',d:'same'},
+];
+
+const SOCIALS = [
+  {name:'Instagram',handle:'@ahof_official',url:'https://instagram.com/ahof_official',ico:'📸',bg:'#E1306C18',color:'#E1306C',count:1100000,change:'+2.1%',bar:92,desc:'Official Instagram — photos, reels, stories. Hit 1.1M followers.'},
+  {name:'TikTok',handle:'@ahof_official',url:'https://tiktok.com/@ahof_official',ico:'▶',bg:'#69C9D018',color:'#69C9D0',count:1000000,change:'+3.7%',bar:85,desc:'Hit 1M followers — February 20, 2026 🎉'},
+  {name:'YouTube',handle:'@AHOF_official',url:'https://youtube.com/@AHOF_official',ico:'▷',bg:'#FF000018',color:'#FF0000',count:580000,change:'+1.8%',bar:55,desc:'MVs, performance videos, vlogs & content.'},
+  {name:'X (Twitter)',handle:'@AHOF_official',url:'https://twitter.com/AHOF_official',ico:'✕',bg:'#FFFFFF12',color:'#AAAAAA',count:130800,change:'+0.9%',bar:34,desc:'Official X/Twitter for news & announcements.'},
+  {name:'Facebook',handle:'AHOF.offcl',url:'https://facebook.com/AHOF.offcl',ico:'f',bg:'#1877F218',color:'#4B8EF5',count:62000,change:'+0.5%',bar:18,desc:'Facebook official page for global fans.'},
+  {name:'Weverse',handle:'weverse.io/ahof',url:'https://weverse.io/ahof',ico:'W',bg:'#7652F018',color:'#9D7EFF',count:240000,change:'+4.2%',bar:28,desc:'FOHA fan community hub — global membership.'},
+  {name:'Weibo',handle:'AHOF_CN',url:'https://m.weibo.cn/u/7922989043',ico:'微',bg:'#E6162D18',color:'#E6162D',count:85000,change:'+1.4%',bar:15,desc:'Chinese official page for CN fans.'},
+];
+
+const FEED = [
+  {text:'<b>TikTok</b> @ahof_official crossed <b>1M followers</b> — Feb 20, 2026 🎉',tag:'MILESTONE',tc:'#00C9A0',tb:'rgba(0,201,160,.14)',dot:'#00C9A0',time:'Feb 20, 2026'},
+  {text:'<b>Pinocchio Hates Lies</b> MV trending on YouTube Korea',tag:'YOUTUBE',tc:'#FF6464',tb:'rgba(255,100,100,.12)',dot:'#FF6464',time:'Nov 2025'},
+  {text:'<b>The Passage</b> earned First Platinum Certification 🏅',tag:'CHART',tc:'#F5C030',tb:'rgba(245,192,48,.13)',dot:'#F5C030',time:'Nov 2025'},
+  {text:'<b>JL</b> 🇵🇭 #JLofAHOF trended on PH Twitter',tag:'VIRAL',tc:'#FF3058',tb:'rgba(255,48,88,.13)',dot:'#FF3058',time:'Recently'},
+  {text:'<b>Who We Are</b> — 369,850 copies Week 1, highest 2025 rookie debut',tag:'RECORD',tc:'#9D7EFF',tb:'rgba(157,126,255,.13)',dot:'#9D7EFF',time:'Jul 2025'},
+  {text:'<b>Chih En</b> 🇹🇼 returned to activities after health hiatus',tag:'UPDATE',tc:'#FFD450',tb:'rgba(255,212,80,.12)',dot:'#FFD450',time:'Jan 2026'},
+];
+
+const FEED_POOL = [
+  {text:'<b>Rendezvous</b> streaming spike detected on Melon',tag:'STREAM',tc:'#00C9A0',tb:'rgba(0,201,160,.14)',dot:'#00C9A0',time:'Just now'},
+  {text:'<b>Woongki</b> 🇰🇷 Weverse post hit 50K hearts',tag:'FAN',tc:'#FF3058',tb:'rgba(255,48,88,.13)',dot:'#FF3058',time:'Just now'},
+  {text:'<b>Daisuke</b> 🇯🇵 Maknae trending in Japan Weverse',tag:'TREND',tc:'#FF6464',tb:'rgba(255,100,100,.12)',dot:'#FF6464',time:'Just now'},
+  {text:'<b>Han</b> 🇰🇷 vocal cover clip going viral on X',tag:'VIRAL',tc:'#9D7EFF',tb:'rgba(157,126,255,.13)',dot:'#9D7EFF',time:'Just now'},
+  {text:'<b>Shuaibo</b> 🇨🇳 Weibo post — 80K reactions',tag:'SOCIAL',tc:'#FF8C32',tb:'rgba(255,140,50,.13)',dot:'#FF8C32',time:'Just now'},
+  {text:'<b>Chih En</b> 🇹🇼 fancam crossed 2M views TikTok',tag:'STREAM',tc:'#FFD450',tb:'rgba(255,212,80,.12)',dot:'#FFD450',time:'Just now'},
+  {text:'<b>Steven</b> 🇦🇺 (Leader) Instagram @steven_3051_ +3K today',tag:'SOCIAL',tc:'#00C9A0',tb:'rgba(0,201,160,.14)',dot:'#00C9A0',time:'Just now'},
+  {text:'<b>Juwon</b> 🇰🇷 ranked #1 daily FOHA fan-vote',tag:'FAN',tc:'#C864FF',tb:'rgba(200,100,255,.13)',dot:'#C864FF',time:'Just now'},
+  {text:'<b>Jeongwoo</b> 🇰🇷 flute moment going viral TikTok',tag:'VIRAL',tc:'#40C4FF',tb:'rgba(64,196,255,.13)',dot:'#40C4FF',time:'Just now'},
+];
+
+const ANNOUNCEMENTS = [
+  {id:1,type:'comeback',brk:true,ico:'🎵',icoBg:'rgba(255,48,88,.15)',icoC:'var(--accent)',title:'AHOF "The Passage" — 2nd Mini Album OUT NOW',meta:'November 2025 · FnF Entertainment',body:'AHOF dropped their second mini album "The Passage" featuring "Pinocchio Hates Lies." Sold 350,000+ copies in 2 days, earning their first Platinum certification.',badge:'COMEBACK',bBg:'rgba(255,48,88,.15)',bC:'var(--accent)',src:'FnF Entertainment Official',time:'Nov 2025'},
+  {id:2,type:'chart',brk:false,ico:'📈',icoBg:'rgba(245,192,48,.15)',icoC:'var(--gold)',title:'First Platinum Certification — "The Passage"',meta:'Gaon Chart · KMCA · 2025',body:'AHOF achieved their first Platinum certification with "The Passage", debuting at the top of Hanteo and breaking their own debut record.',badge:'CHART',bBg:'rgba(245,192,48,.15)',bC:'var(--gold)',src:'Hanteo / Gaon Chart',time:'Nov 2025'},
+  {id:3,type:'social',brk:false,ico:'▶',icoBg:'rgba(105,201,208,.15)',icoC:'#69C9D0',title:'TikTok @ahof_official hits 1,000,000 followers 🎉',meta:'TikTok · @ahof_official · February 20, 2026',body:'AHOF\'s official TikTok crossed 1 million followers on February 20, 2026 — just 7 months after their July 2025 debut. FOHA fans celebrated with #AHOFmillion trending worldwide.',badge:'MILESTONE',bBg:'rgba(0,201,160,.15)',bC:'var(--accent3)',src:'TikTok @ahof_official',time:'Feb 20, 2026'},
+  {id:4,type:'event',brk:false,ico:'🎪',icoBg:'rgba(118,82,240,.15)',icoC:'#9D7EFF',title:'Fan-Con "AHOFOHA" — Seoul, January 3–4, 2026',meta:'Fan Concert · Seoul · Jan 3–4, 2026',body:'AHOF held their first fan concert "AHOFOHA" in Seoul. All 9 members performed — including Chih En making his stage return after his health hiatus.',badge:'EVENT',bBg:'rgba(118,82,240,.15)',bC:'#9D7EFF',src:'FnF Entertainment / Weverse',time:'Jan 3–4, 2026'},
+  {id:5,type:'member',brk:false,ico:'🐰',icoBg:'rgba(255,212,80,.15)',icoC:'#FFD450',title:'Chih En 🇹🇼 returns from health hiatus — Jan 2026',meta:'Member Update · Chih En · January 2026',body:'On September 16, 2025, FnF Entertainment announced Chih En would take a health hiatus. He fully resumed all activities in early January 2026, rejoining AHOF for AHOFOHA fan-con.',badge:'MEMBER',bBg:'rgba(255,212,80,.15)',bC:'#FFD450',src:'FnF Entertainment Statement',time:'Jan 2026'},
+  {id:6,type:'comeback',brk:false,ico:'💿',icoBg:'rgba(0,201,160,.15)',icoC:'var(--accent3)',title:'AHOF Debut — "Who We Are" 1st Mini Album',meta:'Debut · July 1, 2025 · FnF Entertainment',body:'AHOF officially debuted July 1, 2025. "Who We Are" sold 369,850 copies in Week 1 — the highest debut sales for any 2025 rookie group.',badge:'DEBUT',bBg:'rgba(0,201,160,.15)',bC:'var(--accent3)',src:'FnF Entertainment Official',time:'Jul 1, 2025'},
+];
+
+const KR_CHARTS = [
+  {rank:7,title:'Rendezvous',chart:'Melon Daily',mv:'+3',type:'up'},
+  {rank:4,title:'Pinocchio Hates Lies',chart:'Melon Weekly',mv:'NEW',type:'new'},
+  {rank:9,title:'The Passage',chart:'Genie Daily',mv:'+5',type:'up'},
+  {rank:12,title:'The Universe',chart:'FLO Weekly',mv:'-2',type:'dn'},
+  {rank:15,title:'WHO WE ARE',chart:'Bugs Daily',mv:'+1',type:'up'},
+];
+const GL_CHARTS = [
+  {rank:28,title:'Rendezvous',chart:'Spotify Global Weekly',mv:'+12',type:'up'},
+  {rank:14,title:'Pinocchio Hates Lies',chart:'Spotify K-Pop Global',mv:'+6',type:'up'},
+  {rank:3,title:'The Passage',chart:'Apple Music K-Pop Intl',mv:'NEW',type:'new'},
+  {rank:45,title:'WHO WE ARE',chart:'Spotify Viral 50',mv:'-3',type:'dn'},
+];
+const SCHEDULE = [
+  {mo:'JUL',day:'1',yr:'2025',title:'Debut — "Who We Are" 1st Mini Album',desc:'AHOF officially debuts under FnF Entertainment. Universe League champions.',badge:'DEBUT',bc:'rgba(255,48,88,.18)',bct:'var(--accent)'},
+  {mo:'NOV',day:'—',yr:'2025',title:'"The Passage" 2nd Mini Album Release',desc:'350K+ copies in 2 days · First Platinum Certification · FnF Entertainment.',badge:'RELEASE',bc:'rgba(118,82,240,.18)',bct:'#9D7EFF'},
+  {mo:'JAN',day:'3',yr:'2026',title:'Fan-Con "AHOFOHA" — Seoul',desc:'Jan 3–4, 2026. Chih En\'s stage return. All 9 members. FOHA fans only.',badge:'FAN-CON',bc:'rgba(245,192,48,.18)',bct:'var(--gold)'},
+  {mo:'FEB',day:'20',yr:'2026',title:'TikTok 1M Followers Milestone',desc:'@ahof_official crossed 1,000,000 followers on TikTok.',badge:'MILESTONE',bc:'rgba(0,201,160,.18)',bct:'var(--accent3)'},
+  {mo:'2026',day:'—',yr:'',title:'Upcoming: 3rd Release (TBA)',desc:'FnF Entertainment — date to be announced.',badge:'UPCOMING',bc:'rgba(255,255,255,.05)',bct:'var(--muted)'},
+];
+
+// ══════════════ STATE ══════════════
+let curPage = 'home';
+let pageHistory = ['home'];
+let annFilter_val = 'all';
+let allAnn = [...ANNOUNCEMENTS];
+let scanDone = false;
+let tick = 0;
+let dashInited = false, musicInited = false, chartInited = false;
+
+// Chart data
+const C_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
+const C_SALES  = [0,0,0,0,0,0,369.9,395,410,430,780];
+const C_STREAMS= [0,0,0,0,0,0.8,4.2,6.1,7.5,8.8,14.2];
+const C_SOCIAL = [0,0,0.14,0.28,0.45,0.72,1.1,1.3,1.5,1.7,2.1];
+let dashSeries = C_SALES, dashColor = '#FF3058', dashUnit = 'K copies';
+
+// ══════════════ UTILS ══════════════
+const fmt = n => n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?Math.round(n/1e3)+'K':String(n);
+const h2r = (hex,a) => { try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgba(${r},${g},${b},${a})`}catch{return`rgba(100,100,100,${a})`} };
+
+// ══════════════ CLOCKS ══════════════
+function tickClocks(){
+  const t = new Date().toLocaleTimeString('en-PH',{hour12:false});
+  document.querySelectorAll('[id^="clk"]').forEach(el=>{ el.textContent=t; });
+}
+setInterval(tickClocks,1000); tickClocks();
+
+// ══════════════ NAVIGATION ══════════════
+function goTo(id){
+  if(id===curPage) return;
+  const prev = document.getElementById('pg-'+curPage);
+  const next = document.getElementById('pg-'+id);
+  if(!next) return;
+  if(prev) prev.classList.remove('show');
+  next.classList.add('show');
+  pageHistory.push(id);
+  if(pageHistory.length > 20) pageHistory.shift();
+  curPage = id;
+  // update sidebar active
+  document.querySelectorAll('.ni[data-page]').forEach(el=>{
+    el.classList.toggle('on', el.dataset.page===id);
+  });
+  // init page content
+  initPage(id);
+}
+
+function goBack(){
+  if(pageHistory.length>=2){
+    pageHistory.pop(); // remove current
+    const prev = pageHistory[pageHistory.length-1];
+    const prevPage = document.getElementById('pg-'+prev);
+    const curEl = document.getElementById('pg-'+curPage);
+    if(curEl) curEl.classList.remove('show');
+    if(prevPage){ prevPage.classList.add('show'); }
+    document.querySelectorAll('.ni[data-page]').forEach(el=>{
+      el.classList.toggle('on', el.dataset.page===prev);
+    });
+    curPage = prev;
+    initPage(prev);
+  } else {
+    goTo('home');
+  }
+}
+
+function initPage(id){
+  if(id==='dashboard' && !dashInited){ renderDashboard(); dashInited=true; }
+  else if(id==='dashboard'){ renderDashFeed(); renderDashTracks(); }
+  if(id==='music' && !musicInited){ renderMusic(); musicInited=true; }
+  if(id==='social'){ renderSocial(); }
+  if(id==='charting' && !chartInited){ renderCharting(); chartInited=true; }
+  if(id==='fanbase'){ renderFanbase(); }
+  if(id==='schedule'){ renderSchedule(); }
+  if(id==='announcements'){ renderAnn(); if(!scanDone){ setTimeout(runScan,600); scanDone=true; } }
+}
+
+// ══════════════ SIDEBAR MEMBERS ══════════════
+function buildSidebar(){
+  document.getElementById('memberSidebar').innerHTML = MEMBERS.map(m=>`
+    <div class="mc" onclick="goTo('fanbase')">
+      <div class="mav" style="background:${m.col};color:${m.tc}">${m.id}</div>
+      <div>
+        <div style="font-size:11px;color:var(--text);font-weight:500;">${m.name} ${m.flag}</div>
+        <div style="font-size:9px;color:var(--muted);">${m.role.split('·')[0].trim()}</div>
+      </div>
+    </div>`).join('');
+}
+buildSidebar();
+
+// ══════════════ DASHBOARD ══════════════
+function renderDashboard(){
+  renderDashTracks();
+  renderDashSoc();
+  renderDashFeed();
+  setTimeout(()=>{ drawLine('dashLine',dashSeries,dashColor,dashUnit,C_LABELS,140); drawDonut('dashDonut',140); },80);
+}
+
+function renderDashTracks(){
+  const el=document.getElementById('d-tracks'); if(!el)return;
+  el.innerHTML=SONGS.slice(0,5).map((s,i)=>`<tr>
+    <td><span class="rn ${i<3?'t':''}">${i+1}</span></td>
+    <td><div style="font-weight:500;font-size:10.5px;color:var(--text)">${s.title}</div><div style="font-size:9px;color:var(--muted)">${s.album}</div></td>
+    <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent3)">${fmt(s.streams)}</span></td>
+    <td><span class="${s.d==='up'?'sup':s.d==='dn'?'sdn':'ssm'}">${s.d==='up'?'▲':s.d==='dn'?'▼':'—'}</span></td>
+  </tr>`).join('');
+}
+
+function renderDashSoc(){
+  const el=document.getElementById('d-soc'); if(!el)return;
+  el.innerHTML=SOCIALS.slice(0,4).map(s=>`
+  <a class="soc-item" href="${s.url}" target="_blank" rel="noopener">
+    <div class="soc-ico" style="background:${s.bg};color:${s.color}">${s.ico}</div>
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:500;color:var(--text)">${s.name}</div>
+      <div class="soc-bar-w"><div class="soc-bar" style="width:${s.bar}%;background:${s.color}"></div></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text)">${fmt(s.count)}</div>
+      <div style="font-size:9.5px;color:var(--accent3);font-weight:600">${s.change}</div>
+    </div>
+  </a>`).join('');
+}
+
+function renderDashFeed(){
+  const el=document.getElementById('d-feed'); if(!el)return;
+  el.innerHTML=FEED.map(f=>`<div class="fi">
+    <div class="fdot" style="background:${f.dot};box-shadow:0 0 5px ${f.dot}66"></div>
+    <div>
+      <div class="ftxt"><span class="ftag" style="color:${f.tc};background:${f.tb}">${f.tag}</span>${f.text}</div>
+      <div class="ftime">${f.time}</div>
+    </div>
+  </div>`).join('');
+}
+
+function switchDashTab(el,key){
+  document.querySelectorAll('#pg-dashboard .tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  if(key==='sales'){dashSeries=C_SALES;dashColor='#FF3058';dashUnit='K copies';}
+  else if(key==='streams'){dashSeries=C_STREAMS;dashColor='#00C9A0';dashUnit='M streams';}
+  else{dashSeries=C_SOCIAL;dashColor='#7652F0';dashUnit='M followers';}
+  drawLine('dashLine',dashSeries,dashColor,dashUnit,C_LABELS,140);
+}
+
+// ══════════════ MUSIC ══════════════
+function renderMusic(){
+  const el=document.getElementById('m-tracks'); if(!el)return;
+  el.innerHTML=SONGS.map((s,i)=>`<tr>
+    <td><span class="rn ${i<3?'t':''}">${i+1}</span></td>
+    <td style="font-weight:500;font-size:10.5px;color:var(--text)">${s.title}</td>
+    <td style="font-size:9px;color:var(--muted)">${s.album}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent3)">${fmt(s.streams)}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">${s.peak}</td>
+    <td><span class="${s.d==='up'?'sup':s.d==='dn'?'sdn':'ssm'}">${s.d==='up'?'▲':s.d==='dn'?'▼':'—'}</span></td>
+  </tr>`).join('');
+  setTimeout(()=>{
+    const mLabels=['May','Jun','Jul','Aug','Sep','Oct','Nov'];
+    const mData=[0.8,2.1,3.4,4.2,6.5,8.8,14.2];
+    drawLine('musicLine',mData,'#00C9A0','M streams',mLabels,130);
+  },80);
+}
+
+// ══════════════ SOCIAL ══════════════
+function renderSocial(){
+  const el=document.getElementById('soc-full'); if(!el)return;
+  el.innerHTML=SOCIALS.map(s=>`
+  <a href="${s.url}" target="_blank" rel="noopener" style="text-decoration:none;">
+    <div style="background:var(--panel);border:1px solid var(--border);border-top:2px solid ${s.color};border-radius:11px;padding:15px;transition:border-color .18s;cursor:pointer;margin-bottom:0;" onmouseover="this.style.borderColor='${s.color}'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:38px;height:38px;border-radius:9px;background:${s.bg};color:${s.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;">${s.ico}</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--text)">${s.name}</div><div style="font-size:9.5px;color:var(--muted)">${s.handle}</div></div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:${s.color};">${fmt(s.count)}</div>
+      <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">Followers / Members</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.55;">${s.desc}</div>
+      <div style="margin-top:9px;height:3px;background:var(--border);border-radius:3px;"><div style="width:${s.bar}%;height:100%;border-radius:3px;background:${s.color};"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:8.5px;color:var(--muted);">Relative reach</span>
+        <span style="font-size:10px;font-weight:600;color:var(--accent3);">${s.change} today</span>
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:10px;font-weight:500;color:${s.color};background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:4px 10px;border-radius:6px;">↗ Open Official Page</div>
+    </div>
+  </a>`).join('');
+}
+
+// ══════════════ CHARTING ══════════════
+function renderCharting(){
+  const krel=document.getElementById('kr-charts');
+  const glel=document.getElementById('gl-charts');
+  if(krel) krel.innerHTML=KR_CHARTS.map(e=>`<div class="ce">
+    <div class="ce-rank ${e.rank<=3?'t':''}">${e.rank}</div>
+    <div style="flex:1"><div style="font-size:11.5px;font-weight:500;color:var(--text)">${e.title}</div><div style="font-size:9px;color:var(--muted)">${e.chart}</div></div>
+    <div style="font-size:11px;font-weight:600;${e.type==='up'?'color:var(--accent3)':e.type==='dn'?'color:var(--accent)':e.type==='new'?'color:var(--gold)':'color:var(--muted)'}">${e.mv==='NEW'?'🆕 NEW':e.type==='up'?'▲ '+e.mv:e.type==='dn'?'▼ '+e.mv:'—'}</div>
+  </div>`).join('');
+  if(glel) glel.innerHTML=GL_CHARTS.map(e=>`<div class="ce">
+    <div class="ce-rank ${e.rank<=3?'t':''}">${e.rank}</div>
+    <div style="flex:1"><div style="font-size:11.5px;font-weight:500;color:var(--text)">${e.title}</div><div style="font-size:9px;color:var(--muted)">${e.chart}</div></div>
+    <div style="font-size:11px;font-weight:600;${e.type==='up'?'color:var(--accent3)':e.type==='dn'?'color:var(--accent)':e.type==='new'?'color:var(--gold)':'color:var(--muted)'}">${e.mv==='NEW'?'🆕 NEW':e.type==='up'?'▲ '+e.mv:e.type==='dn'?'▼ '+e.mv:'—'}</div>
+  </div>`).join('');
+  setTimeout(()=>{
+    const cData=[12000,45000,98000,185000,260000,310000,350000];
+    const cLbls=['D1','D2','D3','D4','D5','D6','D7'];
+    drawLine('chartLine',cData,'#F5C030','copies',cLbls,130);
+  },80);
+}
+
+// ══════════════ FANBASE ══════════════
+function renderFanbase(){
+  const el=document.getElementById('member-cards'); if(!el)return;
+  el.innerHTML=MEMBERS.map(m=>`
+  <div class="mem-card" style="border-top:2px solid ${m.tc};">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+      <div class="mav" style="width:34px;height:34px;font-size:11px;background:${m.col};color:${m.tc}">${m.id}</div>
+      <div><div style="font-size:12.5px;font-weight:600;color:var(--text)">${m.name} ${m.flag}</div><div style="font-size:9.5px;color:var(--muted)">${m.role}</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);line-height:1.65;">
+      <div>🗓 <span style="color:var(--text)">${m.bd}</span></div>
+      <div>🌍 <span style="color:var(--text)">${m.nat}</span></div>
+      <div>🏆 Rank <span style="color:var(--text)">#${m.rank}</span></div>
+      <div style="margin-top:5px;font-size:9.5px;">${m.facts}</div>
+    </div>
+    <div style="display:inline-block;margin-top:7px;font-size:8.5px;padding:2px 7px;border-radius:4px;background:rgba(118,82,240,.1);color:#9D7EFF;border:1px solid rgba(118,82,240,.2);">${m.mbti}</div>
+  </div>`).join('');
+}
+
+// ══════════════ SCHEDULE ══════════════
+function renderSchedule(){
+  const el=document.getElementById('sched-list'); if(!el)return;
+  el.innerHTML=SCHEDULE.map(s=>`
+  <div class="sched-item">
+    <div style="text-align:center;flex-shrink:0;width:42px;">
+      <div class="sched-mo">${s.mo}</div>
+      <div class="sched-day">${s.day}</div>
+      <div style="font-size:9px;color:var(--muted)">${s.yr}</div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600;color:var(--text)">${s.title}</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.55">${s.desc}</div>
+      <div style="display:inline-block;margin-top:7px;font-size:8px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:${s.bc};color:${s.bct}">${s.badge}</div>
+    </div>
+  </div>`).join('');
+}
+
+// ══════════════ ANNOUNCEMENTS ══════════════
+function annFilter(el,type){
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  annFilter_val=type;
+  renderAnn();
+}
+
+function renderAnn(){
+  const el=document.getElementById('ann-list'); if(!el)return;
+  const list = annFilter_val==='all' ? allAnn : allAnn.filter(a=>a.type===annFilter_val);
+  if(!list.length){ el.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">No announcements in this category.</div>`; return; }
+  el.innerHTML=list.map(a=>`
+  <div class="ann-card ${a.brk?'brk':''} ${a.ai?'ai':''}">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
+      <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:${a.icoBg};color:${a.icoC}">${a.ico}</div>
+      <div style="flex:1">
+        <div style="font-size:12.5px;font-weight:600;color:var(--text);line-height:1.4">${a.title}</div>
+        <div style="font-size:9.5px;color:var(--muted);margin-top:2px">${a.meta}</div>
+      </div>
+      ${a.brk?`<div style="font-size:8.5px;padding:2px 8px;background:rgba(255,48,88,.18);color:var(--accent);border-radius:5px;font-weight:700;flex-shrink:0;">🔴 LATEST</div>`:''}
+      ${a.ai?`<div style="font-size:8.5px;padding:2px 8px;background:rgba(118,82,240,.15);color:#9D7EFF;border-radius:5px;font-weight:700;flex-shrink:0;">🤖 AI</div>`:''}
+    </div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.65;margin-bottom:9px">${a.body}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:8.5px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:${a.bBg};color:${a.bC}">${a.badge}</span>
+      <span style="font-size:9px;color:var(--muted2)">📰 ${a.src} · ${a.time}</span>
+    </div>
+  </div>`).join('');
+}
+
+async function runScan(){
+  const btn=document.getElementById('scanBtn');
+  const res=document.getElementById('scanResult');
+  if(!btn||!res) return;
+  btn.disabled=true; btn.style.opacity='.65'; btn.textContent='⏳ Scanning...';
+  res.innerHTML=`<div style="padding:11px 14px;background:rgba(118,82,240,.07);border:1px solid rgba(118,82,240,.28);border-radius:9px;display:flex;align-items:center;gap:9px;margin-bottom:4px;">
+    <div class="typing"><span></span><span></span><span></span></div>
+    <div style="font-size:11px;color:#9D7EFF;">🤖 AI scanning AHOF official accounts &amp; K-pop news...</div>
+  </div>`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:`You are an AHOF K-pop analytics AI for FnF Entertainment dashboard. Search for the LATEST news about AHOF kpop group (ahof_official). Look for: comebacks, new releases, chart achievements, events, member news.
+Respond ONLY with a valid JSON array (no markdown, no backticks, no extra text):
+[{"type":"comeback|chart|social|event|member","title":"...","body":"...","src":"...","time":"...","badge":"..."}]
+If no new news beyond what's known (Who We Are album, The Passage album, TikTok 1M Feb 2026, AHOFOHA fan-con Jan 2026, Chih En hiatus return), return exactly: []`,
+        messages:[{role:'user',content:'Search for very latest AHOF kpop news and announcements in 2026. Any new comeback, release, event, member update?'}]
+      })
+    });
+    const data=await r.json();
+    const txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    let parsed=[];
+    try{ const m=txt.match(/\[[\s\S]*\]/); if(m) parsed=JSON.parse(m[0]); }catch(e){}
+    const now=new Date().toLocaleString('en-PH',{hour12:true,hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'});
+    document.getElementById('lastScan').textContent=now;
+    const typeMap={comeback:'rgba(255,48,88,.15)',chart:'rgba(245,192,48,.15)',social:'rgba(0,201,160,.15)',event:'rgba(118,82,240,.15)',member:'rgba(255,212,80,.15)'};
+    const colorMap={comeback:'var(--accent)',chart:'var(--gold)',social:'var(--accent3)',event:'#9D7EFF',member:'#FFD450'};
+    const icoMap={comeback:'🎵',chart:'📈',social:'📱',event:'🎪',member:'👤'};
+    if(parsed.length>0){
+      const newItems=parsed.map((item,i)=>({
+        id:Date.now()+i,type:item.type||'social',brk:true,ai:true,
+        ico:icoMap[item.type]||'📢',icoBg:typeMap[item.type]||'rgba(118,82,240,.15)',icoC:colorMap[item.type]||'#9D7EFF',
+        title:item.title||'New AHOF Update',meta:`AI Scan · ${now}`,body:item.body||'',
+        badge:item.badge||'UPDATE',bBg:typeMap[item.type]||'rgba(118,82,240,.15)',bC:colorMap[item.type]||'#9D7EFF',
+        src:item.src||'AI Web Scan',time:item.time||now,
+      }));
+      allAnn.forEach(a=>{ if(!ANNOUNCEMENTS.find(b=>b.id===a.id)) a.brk=false; });
+      allAnn=[...newItems,...allAnn];
+      newItems.forEach(item=>{ FEED.unshift({text:`<b>${item.title}</b>`,tag:item.badge,tc:item.icoC,tb:item.icoBg,dot:item.icoC,time:'AI Scan · Just now'}); });
+      if(FEED.length>18) FEED.splice(18);
+      renderAnn();
+      res.innerHTML=`<div style="padding:11px 14px;background:rgba(0,201,160,.07);border:1px solid rgba(0,201,160,.28);border-radius:9px;display:flex;align-items:center;gap:9px;">✅ <span style="font-size:11px;color:var(--accent3);">Found <b>${newItems.length} new update(s)</b> — added to feed!</span></div>`;
+    } else {
+      res.innerHTML=`<div style="padding:11px 14px;background:rgba(82,91,120,.07);border:1px solid var(--border);border-radius:9px;font-size:11px;color:var(--muted);">🔍 No new announcements beyond known updates. All feeds current as of ${now}.</div>`;
+    }
+  }catch(e){
+    res.innerHTML=`<div style="padding:11px 14px;background:rgba(255,48,88,.06);border:1px solid rgba(255,48,88,.28);border-radius:9px;font-size:11px;color:var(--accent);">⚠️ Scan failed. Showing cached announcements.</div>`;
+  }
+  btn.disabled=false; btn.style.opacity='1'; btn.textContent='⚡ Scan Again';
+}
+
+async function askAI(){
+  const inp=document.getElementById('askInput');
+  const ans=document.getElementById('ai-answer');
+  const q=inp.value.trim(); if(!q||!ans) return;
+  ans.style.display='block';
+  ans.innerHTML=`<div class="ai-ans"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:`You are the AHOF analytics AI assistant for FnF Entertainment. AHOF is a 9-member K-pop boy group (JL 🇵🇭, Woongki 🇰🇷, Han 🇰🇷, Steven 🇦🇺, Shuaibo 🇨🇳, Juwon 🇰🇷, Jeongwoo 🇰🇷, Chih En 🇹🇼, Daisuke 🇯🇵) formed via Universe League (SBS), debuted July 1 2025 under FnF Entertainment. Fandom: FOHA. Search the web for current info when needed. Answer in 2-4 sentences.`,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data=await r.json();
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    ans.innerHTML=`<div class="ai-ans"><div style="font-size:9px;color:#9D7EFF;letter-spacing:1px;font-weight:600;margin-bottom:5px;">🤖 AI ANSWER</div><div style="font-size:11.5px;color:var(--text);line-height:1.65">${text.replace(/\n/g,'<br>')}</div></div>`;
+  }catch(e){
+    ans.innerHTML=`<div class="ai-ans" style="color:var(--accent);font-size:11px;">⚠️ Could not get answer. Try again.</div>`;
+  }
+  inp.value='';
+}
+
+// ══════════════ CANVAS: LINE CHART ══════════════
+function drawLine(id,data,color,unit,labels,h){
+  const c=document.getElementById(id); if(!c)return;
+  const w=c.offsetWidth||500; c.width=w; c.height=h;
+  const ctx=c.getContext('2d');
+  const pad={t:10,r:14,b:24,l:40};
+  const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+  const maxV=Math.max(...data)*1.08||1;
+  ctx.clearRect(0,0,w,h);
+  const xP=i=>pad.l+(i/(data.length-1))*cw;
+  const yP=v=>pad.t+(1-v/maxV)*ch;
+  // grid
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=pad.t+t*ch;
+    ctx.strokeStyle='rgba(24,29,44,.9)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    const v=maxV*(1-t);
+    ctx.fillStyle='rgba(82,91,120,.75)';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';
+    ctx.fillText(v>=1000?(v/1000).toFixed(1)+'K':v.toFixed(v<1?1:0),pad.l-3,y+3);
+  });
+  // fill
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,h2r(color.startsWith('var')?'#FF3058':color,.2));
+  grad.addColorStop(1,h2r(color.startsWith('var')?'#FF3058':color,0));
+  ctx.beginPath();ctx.moveTo(xP(0),yP(data[0]));
+  data.forEach((v,i)=>{if(!i)return;const cx=(xP(i-1)+xP(i))/2;ctx.bezierCurveTo(cx,yP(data[i-1]),cx,yP(v),xP(i),yP(v));});
+  ctx.lineTo(xP(data.length-1),pad.t+ch);ctx.lineTo(xP(0),pad.t+ch);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  // line
+  const lc2=color.startsWith('var')?'#FF3058':color;
+  ctx.beginPath();ctx.moveTo(xP(0),yP(data[0]));
+  data.forEach((v,i)=>{if(!i)return;const cx=(xP(i-1)+xP(i))/2;ctx.bezierCurveTo(cx,yP(data[i-1]),cx,yP(v),xP(i),yP(v));});
+  ctx.strokeStyle=lc2;ctx.lineWidth=2;ctx.stroke();
+  // dots & labels
+  data.forEach((v,i)=>{
+    if(v===0){ctx.fillStyle='rgba(82,91,120,.7)';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText(labels[i]||'',xP(i),h-4);return;}
+    ctx.beginPath();ctx.arc(xP(i),yP(v),3,0,Math.PI*2);
+    ctx.fillStyle=lc2;ctx.fill();ctx.strokeStyle='#07090F';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='rgba(82,91,120,.8)';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText(labels[i]||'',xP(i),h-4);
+    if(i===data.length-1){ctx.fillStyle=lc2;ctx.font='bold 8.5px DM Mono,monospace';const dv=v>=1000?(v/1000).toFixed(1)+'K':v.toFixed(1);ctx.fillText(dv+' '+unit,xP(i),yP(v)-9);}
+  });
+}
+
+// ══════════════ CANVAS: DONUT ══════════════
+function drawDonut(id,h){
+  const c=document.getElementById(id); if(!c)return;
+  const sz=c.offsetWidth||240; c.width=sz; c.height=h;
+  const ctx=c.getContext('2d'),cx=sz/2,cy=h*.43,r=h*.33,ir=h*.2;
+  const sl=[{l:'TikTok',v:36,c:'#69C9D0'},{l:'Instagram',v:28,c:'#E1306C'},{l:'YouTube',v:20,c:'#FF0000'},{l:'X',v:9,c:'#AAAAAA'},{l:'Weverse',v:7,c:'#9D7EFF'}];
+  let s=-Math.PI/2;
+  sl.forEach(x=>{
+    const a=(x.v/100)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,s,s+a);ctx.closePath();
+    ctx.fillStyle=x.c;ctx.fill();ctx.strokeStyle='#07090F';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,cy,ir,0,Math.PI*2);ctx.fillStyle='#0C0F18';ctx.fill();s+=a;
+  });
+  ctx.fillStyle='#E6EAF5';ctx.font=`bold ${Math.round(h*.1)}px Bebas Neue,sans-serif`;ctx.textAlign='center';ctx.fillText('SOCIAL',cx,cy+h*.03);
+  ctx.fillStyle='#525B78';ctx.font=`${Math.round(h*.056)}px DM Sans,sans-serif`;ctx.fillText('MIX',cx,cy+h*.1);
+  sl.forEach((x,i)=>{
+    const xi=(i%3)*(sz/3)+2,yi=h*.82+Math.floor(i/3)*h*.12;
+    ctx.beginPath();ctx.arc(xi+4,yi-3,3,0,Math.PI*2);ctx.fillStyle=x.c;ctx.fill();
+    ctx.fillStyle='#8090A8';ctx.font=`${Math.round(h*.056)}px DM Sans,sans-serif`;ctx.textAlign='left';ctx.fillText(`${x.l} ${x.v}%`,xi+10,yi);
+  });
+}
+
+// ══════════════ LIVE TICK ══════════════
+setInterval(()=>{
+  tick++;
+  SONGS.forEach(s=>{ s.streams+=Math.floor(Math.random()*500-80); });
+  SOCIALS[0].count+=Math.floor(Math.random()*8);
+  SOCIALS[1].count+=Math.floor(Math.random()*6);
+  SOCIALS[2].count+=Math.floor(Math.random()*3);
+  if(tick%7===0){
+    FEED.unshift(FEED_POOL[tick%FEED_POOL.length]);
+    if(FEED.length>18) FEED.splice(18);
+  }
+  if(curPage==='dashboard'){
+    renderDashTracks();
+    if(tick%5===0) renderDashSoc();
+    if(tick%7===0) renderDashFeed();
+  }
+  if(curPage==='music'){
+    const el=document.getElementById('m-tracks'); if(el)
+    el.innerHTML=SONGS.map((s,i)=>`<tr>
+      <td><span class="rn ${i<3?'t':''}">${i+1}</span></td>
+      <td style="font-weight:500;font-size:10.5px;color:var(--text)">${s.title}</td>
+      <td style="font-size:9px;color:var(--muted)">${s.album}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent3)">${fmt(s.streams)}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">${s.peak}</td>
+      <td><span class="${s.d==='up'?'sup':s.d==='dn'?'sdn':'ssm'}">${s.d==='up'?'▲':s.d==='dn'?'▼':'—'}</span></td>
+    </tr>`).join('');
+  }
+},2200);
+
+// ══════════════ EXIT ══════════════
+function showExit(){ document.getElementById('exitOv').classList.add('show'); }
+function closeExit(){ document.getElementById('exitOv').classList.remove('show'); }
+function doExit(){
+  document.body.style.transition='opacity .4s';
+  document.body.style.opacity='0';
+  setTimeout(()=>{
+    document.body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px;background:#07090F;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:5px;background:linear-gradient(130deg,#FF3058,#7652F0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AHOF</div>
+      <div style="font-size:11px;letter-spacing:3px;color:#525B78;text-transform:uppercase;">Session Ended · FOHA Forever</div>
+    </div>`;
+  },400);
+}
+
+// ══════════════ RESIZE ══════════════
+window.addEventListener('resize',()=>{
+  if(curPage==='dashboard'){ drawLine('dashLine',dashSeries,dashColor,dashUnit,C_LABELS,140); drawDonut('dashDonut',140); }
+  if(curPage==='music'){ const mD=[0.8,2.1,3.4,4.2,6.5,8.8,14.2];drawLine('musicLine',mD,'#00C9A0','M streams',['May','Jun','Jul','Aug','Sep','Oct','Nov'],130); }
+  if(curPage==='charting'){ const cD=[12000,45000,98000,185000,260000,310000,350000];drawLine('chartLine',cD,'#F5C030','copies',['D1','D2','D3','D4','D5','D6','D7'],130); }
+});
+</script>
+</body>
+</html>
